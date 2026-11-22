@@ -1,6 +1,4 @@
-# Code Review: Triangle
-
-Вихідний проєкт: https://github.com/gprohorov/Triangle
+# Code Review
 
 ## Зауваження
 
@@ -27,10 +25,3 @@
 6. Код відформатований.
 7. Main переписаний як звичайний клас, показує роботу Triangle і перевіряє основні випадки.
 8. Файли IDE додані в .gitignore.
-
-## Запуск
-
-```
-javac -d out src/*.java
-java -cp out Main
-```
