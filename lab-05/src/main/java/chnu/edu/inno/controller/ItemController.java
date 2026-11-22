@@ -1,29 +1,25 @@
 package chnu.edu.inno.controller;
 
-
-/*
-  @author   george
-  @project   inno
-  @class  ItemController
-  @version  1.0.0 
-  @since 27/09/2026 - 19.09
-*/
-
-import chnu.edu.inno.model.Item;
+import chnu.edu.inno.model.dto.request.ItemRequest;
 import chnu.edu.inno.model.dto.response.ApiResponse;
 import chnu.edu.inno.model.dto.response.BaseMetaData;
+import chnu.edu.inno.model.dto.response.ItemResponse;
 import chnu.edu.inno.model.dto.response.PaginationMetaData;
 import chnu.edu.inno.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.StringToClassMapItem;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
@@ -33,72 +29,40 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping("/{id}")
-    public Item getItemById(@PathVariable String id) {
-        return itemService.getItemById(id);
+    @Operation(summary = "Get item by id", description = "200 if found, 404 if item does not exist")
+    public ResponseEntity<ApiResponse<BaseMetaData, ItemResponse>> getItemById(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.ofItem(HttpStatus.OK, itemService.getItemById(id)));
     }
 
-    @GetMapping()
-    public List<Item> getAllItems() {
-        return itemService.getAllItems();
+    @GetMapping
+    @Operation(summary = "Get page of items, sorted by id ASC, 5 items per page by default",
+            description = "200 with page of items, 400 if page or size is invalid")
+    public ResponseEntity<ApiResponse<PaginationMetaData, ItemResponse>> getItemsPage(
+            @Parameter(description = "Page number, starts from 0")
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @Parameter(description = "Page size, from 1 to " + ItemService.MAX_PAGE_SIZE)
+            @RequestParam(name = "size", defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(itemService.getPage(page, size));
     }
 
     @PostMapping
-    public Item createItem(@RequestBody Item item) {
-        return itemService.createItem(item);
+    @Operation(summary = "Create item", description = "201 if created, 400 if request is invalid")
+    public ResponseEntity<ApiResponse<BaseMetaData, ItemResponse>> createItem(@RequestBody ItemRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ofItem(HttpStatus.CREATED, itemService.createItem(request)));
     }
 
-    @PutMapping
-    public Item updateItem(@RequestBody Item item) {
-        return itemService.updateItem(item);
+    @PutMapping("/{id}")
+    @Operation(summary = "Update item", description = "200 if updated, 400 if request is invalid, 404 if item does not exist")
+    public ResponseEntity<ApiResponse<BaseMetaData, ItemResponse>> updateItem(
+            @PathVariable String id, @RequestBody ItemRequest request) {
+        return ResponseEntity.ok(ApiResponse.ofItem(HttpStatus.OK, itemService.updateItem(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteItem(@PathVariable String id) {
-        itemService.deleteItemById(id);
+    @Operation(summary = "Delete item", description = "200 with deleted item, 404 if item does not exist")
+    public ResponseEntity<ApiResponse<BaseMetaData, ItemResponse>> deleteItem(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.ofItem(HttpStatus.OK, itemService.deleteItemById(id)));
     }
-
-    //----------------  More ---------------------------
-
-    @GetMapping("/response/{id}")
-    public ApiResponse<BaseMetaData, Item> getItemByIdAsApiResponse(@PathVariable String id) {
-        return itemService.getItemByIdAsApiResponse(id);
-    }
-
-    @GetMapping("/page")
-    @Operation(
-            method = "GET",
-            summary = "Get  ALL items, ASC, PAGEABLE. Default 5 items per page",
-            description = "Fetch a PAGE of items  by page number and size "
-    )
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Success. Return page of items",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(
-                                            type = "object",
-                                            properties = {
-                                                    @StringToClassMapItem(key = "meta", value = PaginationMetaData.class),
-                                                    @StringToClassMapItem(key = "data", value = Item.class)
-                                            }
-                                    )
-                            )
-                    }
-            )
-    })
-    public ApiResponse<PaginationMetaData, Item> getItemsPage(
-            @Parameter(description = "Request parameter. Page of paginated result. Cannot be less than zero")
-            @RequestParam(name = "page", defaultValue = "0", required = false) Integer page,
-            @Parameter(description = "Request parameter. Size of paginated page result. Cannot be less than zero")
-            @RequestParam(name = "size", defaultValue = "5", required = false) Integer size
-    ) {
-        return itemService.getPage(page, size);
-    }
-
-
-
-
-
 }
