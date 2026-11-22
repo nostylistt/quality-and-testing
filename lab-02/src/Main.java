@@ -1,60 +1,57 @@
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-/*
-  @author   george
-  @project   Default (Template) Project
-  @class  ${NAME}
-  @version  1.0.0 
-  @since 06/09/2026 - 20.13
-*/
+public class Main {
 
-void main() throws IOException {
+    private static final Path TEXT_FILE = Path.of("src", "txt", "harry.txt");
+    private static final Charset TEXT_CHARSET = Charset.forName("windows-1252");
+    private static final int TOP_SIZE = 30;
 
-        LocalDateTime start = LocalDateTime.now();
+    public static void main(String[] args) throws IOException {
+        long start = System.nanoTime();
 
-        String content = new String(Files.readAllBytes(Paths.get("src/txt/harry.txt")));
-        int size = content.length();
-        content = content.replaceAll("[^A-Za-z ]"," ").toLowerCase(Locale.ROOT);
+        String text = Files.readString(TEXT_FILE, TEXT_CHARSET);
+        List<String> words = splitIntoWords(text);
+        Map<String, Integer> frequencies = countFrequencies(words);
+        List<Map.Entry<String, Integer>> top = findTop(frequencies, TOP_SIZE);
 
-        String[] words = content.split(" +"); // 400 000
+        top.forEach(entry -> System.out.println(entry.getKey() + " " + entry.getValue()));
 
-
-        Arrays.sort(words);
-
-        String distinctString = " ";
-
-        for (int i = 0; i < words.length ; i++) {
-            if (!distinctString.contains(words[i])){
-                distinctString+= words[i] + " ";
-            }
-        }
-
-        String[] distincts = distinctString.split(" ");
-        int[] freq = new int[distincts.length];
-
-        for (int i = 0; i < distincts.length ; i++) {
-            int count = 0;
-            for (int j = 0; j < words.length ; j++) {
-                if (distincts[i].equals(words[j])) {
-                    count++;
-                }
-            }
-            freq[i] = count;
-        }
-
-        for (int i = 0; i < distincts.length ; i++) { // 5 000
-            distincts[i] += " " + freq[i];
-        }
-
-        Arrays.sort(distincts, Comparator.comparing(str
-                -> Integer.valueOf(str.replaceAll("[^0-9]", ""))));
-
-        for (int i = 0; i < 30; i++) {
-            System.out.println(distincts[distincts.length - 1 - i]);
-        }
-        LocalDateTime finish = LocalDateTime.now();
-
+        long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
         System.out.println("------");
-        System.out.println(ChronoUnit.MILLIS.between(start, finish));
+        System.out.println(elapsedMillis + " ms");
+    }
 
+    static List<String> splitIntoWords(String text) {
+        String normalized = text.toLowerCase(Locale.ROOT)
+                .replaceAll("[‘’]", "'")
+                .replaceAll("[^a-z']+", " ")
+                .replaceAll("(^|\\s)'+|'+(\\s|$)", " ");
+        return Arrays.stream(normalized.split("\\s+"))
+                .filter(word -> !word.isEmpty())
+                .toList();
+    }
 
+    static Map<String, Integer> countFrequencies(List<String> words) {
+        Map<String, Integer> frequencies = new HashMap<>();
+        for (String word : words) {
+            frequencies.merge(word, 1, Integer::sum);
+        }
+        return frequencies;
+    }
+
+    static List<Map.Entry<String, Integer>> findTop(Map<String, Integer> frequencies, int limit) {
+        return frequencies.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(limit)
+                .toList();
+    }
 }
