@@ -1,4 +1,4 @@
-# Memory Optimization
+# Memory Optimization + Time consuming optimization
 
 ## Зауваження
 
