@@ -1,22 +1,34 @@
+public class Main {
 
-/*
-  @author   george
-  @project   Default (Template) Project
-  @class  ${NAME}
-  @version  1.0.0 
-  @since 05/09/2026 - 20.16
-*/
+    public static void main(String[] args) {
+        Triangle triangle = new Triangle(3, 4, 5);
+        System.out.println(triangle);
+        System.out.println("Perimeter: " + triangle.getPerimeter());
+        System.out.println("Area: " + triangle.getArea());
+        System.out.println("Equilateral: " + triangle.isEquilateral());
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-void main() {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    IO.println(String.format("Hello and welcome!"));
+        check("perimeter of 3-4-5 is 12", triangle.getPerimeter() == 12);
+        check("area of 3-4-5 is 6", Math.abs(triangle.getArea() - 6) < 1e-9);
+        check("3-4-5 is not equilateral", !triangle.isEquilateral());
+        check("0.1+0.2 triangle is equilateral",
+                new Triangle(0.1 + 0.2, 0.3, 0.3).isEquilateral());
+        check("equal triangles are equal", triangle.equals(new Triangle(3, 4, 5)));
+        check("negative side is rejected", throwsOnCreate(-1, 2, 2));
+        check("zero side is rejected", throwsOnCreate(0, 2, 2));
+        check("1-2-10 is rejected", throwsOnCreate(1, 2, 10));
+        check("degenerate 1-2-3 is rejected", throwsOnCreate(1, 2, 3));
+    }
 
-    for (int i = 1; i <= 5; i++) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        IO.println("i = " + i);
+    private static boolean throwsOnCreate(double a, double b, double c) {
+        try {
+            new Triangle(a, b, c);
+            return false;
+        } catch (IllegalArgumentException e) {
+            return true;
+        }
+    }
+
+    private static void check(String name, boolean passed) {
+        System.out.println((passed ? "[OK]   " : "[FAIL] ") + name);
     }
 }
